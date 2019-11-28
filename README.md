@@ -1,6 +1,7 @@
 # battleship
 
 To run the project, you need npm installed with nodejs. (https://nodejs.org/en/)
+To run the project locally, use the *npm run serve* command.
 
 ## Project setup
 ```
