@@ -1,5 +1,8 @@
 # battleship
 
+To run the project, you need npm installed with nodejs. (https://nodejs.org/en/)  
+Once you've done this, run the **npm run serve** command to start the server.  
+The server will start on the port 8080.
 ## Project setup
 ```
 npm install
