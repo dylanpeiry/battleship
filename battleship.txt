@@ -1,0 +1,28 @@
+STATES
+SETUP : two players entering their names
+SETUP_P1 : Player 1 setting up his grid
+SETUP_P2 : Player 2 setting up his grid
+GAME : Game has started, round by round each player plays
+END : Game has ended, offer to restart ?
+
+
+CHECK
+On each cell click, compare the pos to the grid of the player
+if a boat has been hit, put in in green with a cross
+else in red.
+Once a player hit the 8 boats, he wins.
+
+
+OPTIMIZE CODE :
+Add variable to specifiy the current player setting up his board and then just pass the var
+to the vue so that we dont have twice the same code.
+
+
+DONE 05.12.2019
+Added boat icon instead of X
+Changed vue-bootstrap to vuetify components
+Optimized the code for the setup
+Temps de 1seconde ajouté avant que la grille ne switch à l'autre joueur s'il n'a pas trouvé
+Blocage du jeu pendant le timeout de 1 seconde
+Ajout d'animations pour switch des différentes phases de jeu
+Optimisation du code pour les grilles pendant la phase de jeu
