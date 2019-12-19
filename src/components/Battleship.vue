@@ -1,7 +1,7 @@
 <template>
     <v-container>
-        <transition name="slide-fade" mode="out-in">
-            <div id="setup_grid"
+        <transition name="slide-fade" appear>
+            <div id="setup_grid" key="2"
                  v-if="battleship.state < states.GAME && battleship.state > states.SETUP && battleship.player_setup !== null">
                 <v-row>
                     <v-col cols="12" class="text-center">
@@ -22,10 +22,8 @@
                     <v-col cols="12">
                         <GridSetup :player="battleship.player1" :setup-click="s_click"
                                    v-if="battleship.state === states.SETUP_P1"/>
-                        <transition name="slide-fade" mode="out-in">
-                            <GridSetup :player="battleship.player2" :setup-click="s_click"
-                                       v-if="battleship.state === states.SETUP_P2"/>
-                        </transition>
+                        <GridSetup :player="battleship.player2" :setup-click="s_click"
+                                   v-if="battleship.state === states.SETUP_P2"/>
                     </v-col>
                     <v-col class="text-center">
                         <v-btn color="primary" @click="nextState" :disabled="battleship.player_setup.boats > 0">
@@ -34,38 +32,25 @@
                     </v-col>
                 </v-row>
             </div>
-        </transition>
-        <div id="end" v-if="this.battleship.state === states.END">
-            Fin du jeu
-            {{this.battleship.round}}
-            {{this.battleship.player1.boats_found}}
-            {{this.battleship.player2.boats_found}}
-        </div>
-        <transition name="slide-fade">
-            <div id="battleship" v-if="battleship.state === states.GAME">
+            <div id="end" v-if="this.battleship.state === states.END" key="4">
+                <Win :b="battleship" :show-game-time="showGameTime"/>
+            </div>
+            <div id="battleship" v-if="battleship.state === states.GAME" key="3">
+                <GameInfo :b="battleship" :show-game-time="showGameTime"/>
+
                 <v-row>
-                    <v-col cols="12" class="text-center"><h3>Au tour de {{battleship.round === 1 ?
-                        battleship.player1.name :
-                        battleship.player2.name}}</h3></v-col>
-                    <v-col cols="12" class="text-center" v-if="battleship.round === 2"><u>{{battleship.player1.name}}'s
-                        grid</u></v-col>
-                    <v-col cols="12" class="text-center" v-if="battleship.round === 1"><u>{{battleship.player2.name}}'s
-                        grid</u></v-col>
-                </v-row>
-                <v-row>
-                    <v-col cols="12" v-if="battleship.round === 2">
-                        <GridPlay :player="battleship.player1" :player-guessing="battleship.player2"
-                                  :play-click="click"/>
-                    </v-col>
-                    <v-col cols="12" v-if="battleship.round === 1">
-                        <GridPlay :player="battleship.player2" :player-guessing="battleship.player1"
-                                  :play-click="click"/>
+                    <v-col cols="12">
+                        <transition name="slide-fade">
+                            <GridPlay key="1" :player="battleship.player1" :player-guessing="battleship.player2"
+                                      :play-click="click" v-if="battleship.round === 2"/>
+                            <GridPlay key="2" :player="battleship.player2" :player-guessing="battleship.player1"
+                                      :play-click="click" v-if="battleship.round === 1"/>
+                        </transition>
                     </v-col>
                 </v-row>
             </div>
-        </transition>
-        <transition name="slide-fade">
-            <div id="settings" v-if="battleship.state === states.SETUP" style="max-width: 250px;" class="mx-auto">
+            <div key="1" id="settings" v-if="battleship.state === states.SETUP" style="max-width: 250px;"
+                 class="mx-auto">
                 <v-alert
                         border="top"
                         color="red lighten-2"
@@ -105,6 +90,8 @@
 <script>
     import GridSetup from "@/components/Battleship/GridSetup";
     import GridPlay from "@/components/Battleship/GridPlay";
+    import GameInfo from "@/components/Battleship/GameInfo";
+    import Win from "@/components/Battleship/Win";
 
     const DEFAULT_COLS = 8;
     const DEFAULT_ROWS = 8;
@@ -119,13 +106,18 @@
     export default {
         name: "Battleship",
         components: {
+            GameInfo,
             GridSetup,
-            GridPlay
+            GridPlay,
+            Win
         },
         data: () => {
             return {
                 states: STATES,
                 battleship: {
+                    //seconds
+                    game_time: 0,
+                    timer: null,
                     timeout: false,
                     //Who has to play 1: player1, 2: ...
                     round: 1,
@@ -135,6 +127,7 @@
                     player1: {
                         boats: 8,
                         boats_found: 0,
+                        failed_attempts: 0,
                         name: null,
                         grid: [
                             [null, null, null, null, null, null, null, null],
@@ -161,6 +154,7 @@
                     player2: {
                         boats: 8,
                         boats_found: 0,
+                        failed_attempts: 0,
                         name: null,
                         grid: [
                             [null, null, null, null, null, null, null, null],
@@ -205,6 +199,15 @@
                 }
         },
         methods: {
+            showGameTime() {
+                let minutes = Math.floor(this.battleship.game_time / 60);
+                let seconds = this.battleship.game_time - minutes * 60;
+                return `${this.formatGameTime(minutes, '0', 2)}:${this.formatGameTime(seconds, '0', 2)}`;
+            },
+            //https://stackoverflow.com/questions/3733227/javascript-seconds-to-minutes-and-seconds#3733257
+            formatGameTime(time, pad, length) {
+                return (new Array(length + 1).join(pad) + time).slice(-length);
+            },
             //Called after player entered name to start the game
             start() {
                 if (this.battleship.player1.name && this.battleship.player2.name) {
@@ -213,9 +216,18 @@
                 } else {
                     this.battleship.message = 'Please fill in the players names';
                 }
+                this.playerJoined();
+            },
+            startTimer() {
+                this.battleship.timer = setInterval(() => this.battleship.game_time++, 1000);
+            },
+            stopTimer() {
+                clearInterval(this.battleship.timer);
             },
             nextState() {
                 this.battleship.state += 1;
+                if (this.battleship.state === this.states.GAME)
+                    this.startTimer();
             },
             //Setup the boats where the player clicks (only 1 by 1 placement right now)
             s_click(e, player) {
@@ -258,6 +270,7 @@
                         this.timeout = true;
                         setTimeout(() => {
                             this.battleship.round = 2;
+                            this.battleship.player1.failed_attempts++;
                             this.timeout = false;
                         }, 1000);
                     }
@@ -267,12 +280,15 @@
                         this.timeout = true;
                         setTimeout(() => {
                             this.battleship.round = 1;
+                            this.battleship.player2.failed_attempts++;
                             this.timeout = false;
                         }, 1000);
                     }
                 }
-                if (this.win(player))
+                if (this.win(player)) {
                     this.nextState();
+                    this.stopTimer();
+                }
             },
             win(player) {
                 return player.boats_found === 8;
@@ -282,6 +298,19 @@
                 let newR = g[r];
                 newR[c] = !n ? (!f ? 'x' : 'f') : null;
                 this.$set(g, r, newR);
+            },
+
+            playerJoined() {
+                this.$socket.emit('player_join', 'new player');
+            }
+        },
+        sockets: {
+            connect() {
+
+            },
+
+            playerCount(nb) {
+                console.log(nb);
             }
         }
     }
@@ -314,6 +343,7 @@
     .slide-fade-enter-active {
         transition: all 0.3s ease;
     }
+
 
     .slide-fade-enter {
         transform: translateX(100px);

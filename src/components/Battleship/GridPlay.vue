@@ -20,6 +20,11 @@
             player: Object,
             playerGuessing: Object,
             playClick: Function
+        },
+        sockets: {
+            connect() {
+                console.log('dsfsd');
+            }
         }
     }
 </script>

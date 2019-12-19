@@ -5,10 +5,13 @@
         <span class="font-weight-light">BATTLESHIP</span>
       </v-toolbar-title>
       <v-spacer></v-spacer>
+      <v-toolbar-items>
+        <router-link to="/rooms" tag="button">Rooms</router-link>
+      </v-toolbar-items>
     </v-app-bar>
 
     <v-content>
-     <Battleship/>
+      <router-view class="mt-10 ml-auto mr-auto" style="width: 450px"></router-view>
     </v-content>
   </v-app>
 </template>

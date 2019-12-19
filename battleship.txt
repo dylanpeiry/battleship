@@ -17,6 +17,11 @@ OPTIMIZE CODE :
 Add variable to specifiy the current player setting up his board and then just pass the var
 to the vue so that we dont have twice the same code.
 
+ADD WIN END SCREEN
+ADD CURRENT STATE OF GAME
+-Forme de tableau
+-Nombres de tentatives, nombres de bateaux trouvés et nombres restants
+-Timer ?
 
 DONE 05.12.2019
 Added boat icon instead of X
@@ -26,3 +31,4 @@ Temps de 1seconde ajouté avant que la grille ne switch à l'autre joueur s'il n
 Blocage du jeu pendant le timeout de 1 seconde
 Ajout d'animations pour switch des différentes phases de jeu
 Optimisation du code pour les grilles pendant la phase de jeu
+
